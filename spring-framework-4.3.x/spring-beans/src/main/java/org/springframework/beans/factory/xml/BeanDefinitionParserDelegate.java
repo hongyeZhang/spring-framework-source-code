@@ -434,16 +434,22 @@ public class BeanDefinitionParserDelegate {
 	 * {@link org.springframework.beans.factory.parsing.ProblemReporter}.
 	 */
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, BeanDefinition containingBean) {
+		// 获取id属性
 		String id = ele.getAttribute(ID_ATTRIBUTE);
+		// 获取name属性
 		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
 
+		// 定义别名list
 		List<String> aliases = new ArrayList<String>();
 		if (StringUtils.hasLength(nameAttr)) {
+			// 因为可以多个别名用，所以解析成别名数组
 			String[] nameArr = StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 			aliases.addAll(Arrays.asList(nameArr));
 		}
 
+		// beanName默认为id
 		String beanName = id;
+		// 如果没有beanName，那么取出别名数组中的第一个作为beanName
 		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {
 			beanName = aliases.remove(0);
 			if (logger.isDebugEnabled()) {
@@ -461,10 +467,12 @@ public class BeanDefinitionParserDelegate {
 			if (!StringUtils.hasText(beanName)) {
 				try {
 					if (containingBean != null) {
+						// 生成Bean名
 						beanName = BeanDefinitionReaderUtils.generateBeanName(
 								beanDefinition, this.readerContext.getRegistry(), true);
 					}
 					else {
+						// 生成Bean名
 						beanName = this.readerContext.generateBeanName(beanDefinition);
 						// Register an alias for the plain bean class name, if still possible,
 						// if the generator returned the class name plus a suffix.
@@ -515,6 +523,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 解析Bean定义不考虑名称或别名。如果在Bean解析过程中产生异常，则返回null
 	 * Parse the bean definition itself, without regard to name or aliases. May return
 	 * {@code null} if problems occurred during the parsing of the bean definition.
 	 */
@@ -524,26 +533,37 @@ public class BeanDefinitionParserDelegate {
 		this.parseState.push(new BeanEntry(beanName));
 
 		String className = null;
+		// 解析Bean的class属性
 		if (ele.hasAttribute(CLASS_ATTRIBUTE)) {
 			className = ele.getAttribute(CLASS_ATTRIBUTE).trim();
 		}
 
 		try {
 			String parent = null;
+			// 解析parent属性
 			if (ele.hasAttribute(PARENT_ATTRIBUTE)) {
 				parent = ele.getAttribute(PARENT_ATTRIBUTE);
 			}
+			// 为指定的类名和Parent名称创建一个BeanDefinition
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
 
+			// 解析Bean元素的属性并应用于Bean
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+			// 设置Bean的描述信息
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
+			// 解析Bean定义的元数据信息（meta以键值对形式存在）
 			parseMetaElements(ele, bd);
+			// 解析lookup-method元素
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
+			// 解析replaced-method元素
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
 
+			// 解析构造函数参数
 			parseConstructorArgElements(ele, bd);
+			// 解析property元素
 			parsePropertyElements(ele, bd);
+			// 解析qualifier元素
 			parseQualifierElements(ele, bd);
 
 			bd.setResource(this.readerContext.getResource());

@@ -105,9 +105,11 @@ public class BeanDefinitionReaderUtils {
 
 		String generatedBeanName = definition.getBeanClassName();
 		if (generatedBeanName == null) {
+			// 如果有父类，名称为：definition.getParentName() + “$child”
 			if (definition.getParentName() != null) {
 				generatedBeanName = definition.getParentName() + "$child";
 			}
+			// 如果有指定的工厂类，名称为：definition.getFactoryBeanName() + “$created”
 			else if (definition.getFactoryBeanName() != null) {
 				generatedBeanName = definition.getFactoryBeanName() + "$created";
 			}
@@ -120,11 +122,13 @@ public class BeanDefinitionReaderUtils {
 		String id = generatedBeanName;
 		if (isInnerBean) {
 			// Inner bean: generate identity hashcode suffix.
+			// 如果是innerBean，名称为
 			id = generatedBeanName + GENERATED_BEAN_NAME_SEPARATOR + ObjectUtils.getIdentityHexString(definition);
 		}
 		else {
 			// Top-level bean: use plain class name.
 			// Increase counter until the id is unique.
+			// 如果不是InnerBean则为顶层Bean，使用简单的类名。计数器加1
 			int counter = -1;
 			while (counter == -1 || registry.containsBeanDefinition(id)) {
 				counter++;

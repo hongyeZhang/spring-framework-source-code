@@ -82,7 +82,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/** Logger available to subclasses */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	/** Cache of singleton objects: bean name --> bean instance */
+	/** Cache of singleton objects: bean name --> bean instance
+	 * 存放所有创建好的单例Bean
+	 * */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>(256);
 
 	/** Cache of singleton factories: bean name --> ObjectFactory */
@@ -111,13 +113,19 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/** Disposable bean instances: bean name --> disposable instance */
 	private final Map<String, Object> disposableBeans = new LinkedHashMap<String, Object>();
 
-	/** Map between containing bean names: bean name --> Set of bean names that the bean contains */
+	/** Map between containing bean names: bean name --> Set of bean names that the bean contains
+	 * 缓存两个Bean之间的包含关系。如：一个Bean中包含了一个内部 Bean
+	 * */
 	private final Map<String, Set<String>> containedBeanMap = new ConcurrentHashMap<String, Set<String>>(16);
 
-	/** Map between dependent bean names: bean name --> Set of dependent bean names */
+	/** Map between dependent bean names: bean name --> Set of dependent bean names
+	 * 缓存Bean与其他依赖Bean的关系
+	 * */
 	private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<String, Set<String>>(64);
 
-	/** Map between depending bean names: bean name --> Set of bean names for the bean's dependencies */
+	/** Map between depending bean names: bean name --> Set of bean names for the bean's dependencies
+	 * 缓存被依赖Bean与其他依赖Bean的关系
+	 * */
 	private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<String, Set<String>>(64);
 
 
@@ -500,14 +508,19 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		}
 	}
 
+	/**
+	 * 销毁所有的Bean实例
+	 */
 	public void destroySingletons() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Destroying singletons in " + this);
 		}
 		synchronized (this.singletonObjects) {
+			// 设置销毁标志
 			this.singletonsCurrentlyInDestruction = true;
 		}
 
+		// 销毁disposableBeans缓存中所有单例bean
 		String[] disposableBeanNames;
 		synchronized (this.disposableBeans) {
 			disposableBeanNames = StringUtils.toStringArray(this.disposableBeans.keySet());
@@ -516,10 +529,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			destroySingleton(disposableBeanNames[i]);
 		}
 
+		// 清空包含关系
 		this.containedBeanMap.clear();
+		// 清空依赖和被依赖关系
 		this.dependentBeanMap.clear();
 		this.dependenciesForBeanMap.clear();
 
+		// 清空缓存
 		clearSingletonCache();
 	}
 

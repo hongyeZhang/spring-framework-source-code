@@ -37,31 +37,44 @@ import org.springframework.util.StringValueResolver;
  */
 public class SimpleAliasRegistry implements AliasRegistry {
 
-	/** Map from alias to canonical name */
+	/** Map from alias to canonical name
+	 * 存放别名的缓存
+	 * */
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<String, String>(16);
 
 
+	/**
+	 * // 根据Bean的别名进行注册
+	 * @param name  the canonical name
+	 * @param alias the alias to be registered
+	 */
 	@Override
 	public void registerAlias(String name, String alias) {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
 		synchronized (this.aliasMap) {
 			if (alias.equals(name)) {
+				// 如果别名和名字相同
 				this.aliasMap.remove(alias);
 			}
 			else {
+				// 如果别名和名字不相同，根据别名获取Bean名称
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
+					// 如果缓存中已经存在该别名，不需要注册到缓存
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
 						return;
 					}
+					// 如果不允许相同的Bean使用不同的名称则抛出异常
 					if (!allowAliasOverriding()) {
 						throw new IllegalStateException("Cannot register alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
 					}
 				}
+				// 对别名进行循环检查
 				checkForAliasCircle(name, alias);
+				// 把别名放入别名缓存
 				this.aliasMap.put(alias, name);
 			}
 		}
@@ -83,9 +96,14 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 */
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
+			// 获取Bean注册名
 			String registeredName = entry.getValue();
+			// 判断name参数和Bean注册名是否相同
 			if (registeredName.equals(name)) {
+				// 获取别名
 				String registeredAlias = entry.getKey();
+				// 判断别名是否相同
+				// 递归调用hasAlias
 				if (registeredAlias.equals(alias) || hasAlias(registeredAlias, alias)) {
 					return true;
 				}

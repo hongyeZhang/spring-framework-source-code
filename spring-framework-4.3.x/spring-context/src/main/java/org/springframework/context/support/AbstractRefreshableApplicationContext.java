@@ -118,16 +118,26 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws BeansException {
+		// 判断是否已经存在一个BeanFactory
 		if (hasBeanFactory()) {
+			// 销毁已经存在BeanFactory中的所有Bean
 			destroyBeans();
+			// 关闭BeanFactory
 			closeBeanFactory();
 		}
 		try {
+			// 创建新的BeanFactory对象
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
+			// 给BeanFactory设置Id
 			beanFactory.setSerializationId(getId());
+			// 该方法主要对2个标志进行设置：allowBeanDefinitionOverriding 和 allowCircularReferences
+			// allowBeanDefinitionOverriding：是否允许使用相同名称重新注册不同的bean（Spring默认true，SpringBoot默认false）
+			// allowCircularReferences：是否允许循环依赖
 			customizeBeanFactory(beanFactory);
+			// 加载配置文件
 			loadBeanDefinitions(beanFactory);
 			synchronized (this.beanFactoryMonitor) {
+				// 新创建的BeanFactory赋给成员变量beanFactory
 				this.beanFactory = beanFactory;
 			}
 		}

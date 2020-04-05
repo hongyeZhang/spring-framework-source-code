@@ -244,13 +244,24 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 		}
 	}
 
+	/**
+	 *
+	 * 通过String数组参数locations加载Bean，并返回加载Bean的数量
+	 *
+	 * @param locations the resource locations, to be loaded with the ResourceLoader (or
+	 *                  ResourcePatternResolver) of this bean definition reader
+	 * @return
+	 * @throws BeanDefinitionStoreException
+	 */
 	@Override
 	public int loadBeanDefinitions(String... locations) throws BeanDefinitionStoreException {
 		Assert.notNull(locations, "Location array must not be null");
 		int counter = 0;
 		for (String location : locations) {
+			// 加载BeanDefinintion
 			counter += loadBeanDefinitions(location);
 		}
+		// 返回加载Bean的数量
 		return counter;
 	}
 
